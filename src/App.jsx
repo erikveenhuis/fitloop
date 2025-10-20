@@ -16,6 +16,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [viewMode, setViewMode] = useState('camera') // 'camera', 'input', 'output'
+  const [countdown, setCountdown] = useState(null) // null or number (3, 2, 1)
   const cameraRef = useRef(null)
 
   const handleClothingSelect = async (clothing) => {
@@ -82,6 +83,26 @@ function App() {
 
   const handleTryOn = async () => {
     if (selectedClothing) {
+      // Start countdown
+      setCountdown(3)
+      setError(null)
+      
+      // Wait for countdown to finish
+      await new Promise((resolve) => {
+        let count = 3
+        const interval = setInterval(() => {
+          count--
+          if (count > 0) {
+            setCountdown(count)
+          } else {
+            setCountdown(null)
+            clearInterval(interval)
+            resolve()
+          }
+        }, 1000)
+      })
+      
+      // Now capture and process
       await processTryOn(selectedClothing)
     }
   }
@@ -165,7 +186,7 @@ function App() {
               )}
 
               {/* Display based on view mode */}
-              <div className="space-y-4">
+              <div className="space-y-4 relative">
                 {viewMode === 'camera' && (
                   <CameraCapture ref={cameraRef} />
                 )}
@@ -193,6 +214,20 @@ function App() {
                       alt="Try-on result"
                       className="w-full rounded-2xl aspect-[3/4] object-contain bg-black"
                     />
+                  </div>
+                )}
+
+                {/* Countdown Overlay */}
+                {countdown !== null && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm rounded-2xl z-30">
+                    <div className="text-center">
+                      <div className="text-9xl font-bold text-white animate-pulse">
+                        {countdown}
+                      </div>
+                      <p className="mt-4 text-2xl text-purple-200 font-medium">
+                        Get ready! 📸
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
