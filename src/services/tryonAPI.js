@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-// Backend API URL
-const API_URL = 'http://localhost:3001/api'
+// Backend API URL - use relative path in production
+const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 
 // Note: This now uses a backend server to handle Replicate API calls
 // This avoids CORS issues and keeps your API key secure
