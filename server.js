@@ -16,7 +16,8 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-const REPLICATE_API_KEY = process.env.VITE_REPLICATE_API_KEY;
+// Clean and validate API key (remove any whitespace/newlines)
+const REPLICATE_API_KEY = process.env.VITE_REPLICATE_API_KEY?.trim();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -32,6 +33,15 @@ app.post('/api/tryon', async (req, res) => {
       return res.status(400).json({ 
         error: 'API key not configured',
         message: 'Please add your Replicate API key to the .env file'
+      });
+    }
+
+    // Validate API key format
+    if (!/^r8_[a-zA-Z0-9]+$/.test(REPLICATE_API_KEY)) {
+      console.error('Invalid API key format. Key may contain invalid characters or whitespace.');
+      return res.status(400).json({ 
+        error: 'Invalid API key format',
+        message: 'API key appears to have invalid characters. Please check for spaces or newlines.'
       });
     }
 
