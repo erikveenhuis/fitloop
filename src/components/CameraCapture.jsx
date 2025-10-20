@@ -28,11 +28,11 @@ const CameraCapture = forwardRef((props, ref) => {
         throw new Error('Camera not supported in this browser')
       }
 
-      // Request camera access with portrait orientation
+      // Request camera access with flexible constraints for mobile
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 768 },
-          height: { ideal: 1024 },
+          width: { min: 640, ideal: 768, max: 1920 },
+          height: { min: 480, ideal: 1024, max: 1920 },
           aspectRatio: { ideal: 3/4 },
           facingMode: 'user'
         },
@@ -111,7 +111,7 @@ const CameraCapture = forwardRef((props, ref) => {
         autoPlay
         playsInline
         muted
-        className="w-full rounded-lg bg-black aspect-[3/4] object-cover"
+        className="w-full rounded-lg bg-black aspect-[3/4] object-contain"
         style={{ transform: 'scaleX(-1)' }} // Mirror the video
       />
       
