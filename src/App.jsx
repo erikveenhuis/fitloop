@@ -12,22 +12,24 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('shirts')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [tryOnResult, setTryOnResult] = useState(null)
+  const [capturedInput, setCapturedInput] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [showResult, setShowResult] = useState(false)
+  const [viewMode, setViewMode] = useState('camera') // 'camera', 'input', 'output'
   const cameraRef = useRef(null)
 
   const handleClothingSelect = async (clothing) => {
     setSelectedClothing(clothing)
-    setShowResult(false)
+    setViewMode('camera')
     // Don't auto-process, wait for user to click Try On
   }
 
   const handleCategoryChange = (newCategory) => {
     setSelectedCategory(newCategory)
     setCurrentIndex(0)
-    setShowResult(false)
+    setViewMode('camera')
     setTryOnResult(null)
+    setCapturedInput(null)
   }
 
   // Keyboard navigation
@@ -61,9 +63,15 @@ function App() {
         return
       }
 
+      // Store the captured input for comparison
+      setCapturedInput(personImage)
+
       // Call the try-on API with category for better results
       const result = await tryOnClothing(personImage, clothing.path, selectedCategory)
       setTryOnResult(result)
+      
+      // Auto-switch to output view when result is ready
+      setViewMode('output')
     } catch (err) {
       console.error('Try-on error:', err)
       setError(err.message || 'Failed to process try-on. Please try again.')
@@ -74,13 +82,8 @@ function App() {
 
   const handleTryOn = async () => {
     if (selectedClothing) {
-      setShowResult(true)
       await processTryOn(selectedClothing)
     }
-  }
-
-  const toggleView = () => {
-    setShowResult(!showResult)
   }
 
   return (
@@ -121,37 +124,78 @@ function App() {
           {/* Center - Camera/Result - Main Focus */}
           <div className="max-w-2xl mx-auto mb-8">
             <div className="bg-black/40 backdrop-blur-sm rounded-3xl shadow-2xl p-6 border border-white/10 relative z-10">
-              {showResult && tryOnResult && !isLoading ? (
-                <div className="space-y-4">
-                  <div className="relative rounded-2xl overflow-hidden aspect-[3/4]">
-                    <img
-                      src={tryOnResult}
-                      alt="Try-on result"
-                      className="w-full h-full rounded-2xl object-cover"
-                    />
-                    <div className="absolute top-4 right-4">
-                      <button
-                        onClick={toggleView}
-                        className="bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-black/70 transition-colors"
-                      >
-                        Show Camera
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <CameraCapture ref={cameraRef} />
+              {/* View Mode Toggle Buttons */}
+              {(capturedInput || tryOnResult) && (
+                <div className="mb-4 flex gap-2 justify-center">
+                  <button
+                    onClick={() => setViewMode('camera')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      viewMode === 'camera'
+                        ? 'bg-purple-600 text-white shadow-lg'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    📷 Camera
+                  </button>
+                  {capturedInput && (
+                    <button
+                      onClick={() => setViewMode('input')}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        viewMode === 'input'
+                          ? 'bg-blue-600 text-white shadow-lg'
+                          : 'bg-white/10 text-white hover:bg-white/20'
+                      }`}
+                    >
+                      📸 Input
+                    </button>
+                  )}
                   {tryOnResult && (
                     <button
-                      onClick={toggleView}
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
+                      onClick={() => setViewMode('output')}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        viewMode === 'output'
+                          ? 'bg-green-600 text-white shadow-lg'
+                          : 'bg-white/10 text-white hover:bg-white/20'
+                      }`}
                     >
-                      Show Result
+                      ✨ Output
                     </button>
                   )}
                 </div>
               )}
+
+              {/* Display based on view mode */}
+              <div className="space-y-4">
+                {viewMode === 'camera' && (
+                  <CameraCapture ref={cameraRef} />
+                )}
+                
+                {viewMode === 'input' && capturedInput && (
+                  <div className="relative">
+                    <div className="absolute top-2 left-2 bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-medium z-10">
+                      Input Image
+                    </div>
+                    <img
+                      src={capturedInput}
+                      alt="Captured input"
+                      className="w-full rounded-2xl aspect-[3/4] object-contain bg-black"
+                    />
+                  </div>
+                )}
+                
+                {viewMode === 'output' && tryOnResult && (
+                  <div className="relative">
+                    <div className="absolute top-2 left-2 bg-green-600 text-white px-3 py-1 rounded-lg text-sm font-medium z-10">
+                      AI Result
+                    </div>
+                    <img
+                      src={tryOnResult}
+                      alt="Try-on result"
+                      className="w-full rounded-2xl aspect-[3/4] object-contain bg-black"
+                    />
+                  </div>
+                )}
+              </div>
 
               {/* Loading Overlay */}
               {isLoading && (
