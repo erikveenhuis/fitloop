@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import CameraCapture from './components/CameraCapture'
 import ClothingGrid from './components/ClothingGrid'
 import ClothingUploader from './components/ClothingUploader'
@@ -76,9 +76,9 @@ function App() {
     }
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [selectedClothing, isLoading])
+  }, [selectedClothing, isLoading, handleTryOn])
 
-  const processTryOn = async (clothing) => {
+  const processTryOn = useCallback(async (clothing) => {
     if (!cameraRef.current) {
       setError('Camera not ready. Please allow camera access.')
       return
@@ -111,9 +111,9 @@ function App() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [selectedCategory])
 
-  const handleTryOn = async () => {
+  const handleTryOn = useCallback(async () => {
     if (selectedClothing) {
       // Start countdown
       setCountdown(3)
@@ -137,7 +137,7 @@ function App() {
       // Now capture and process
       await processTryOn(selectedClothing)
     }
-  }
+  }, [selectedClothing, processTryOn])
 
   const handleTryOnAll = async () => {
     if (uploadedClothing.length === 0) {
