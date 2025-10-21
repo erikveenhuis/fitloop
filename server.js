@@ -24,81 +24,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', apiKeyConfigured: !!REPLICATE_API_KEY });
 });
 
-// Virtual try-on endpoint
-app.post('/api/tryon', async (req, res) => {
-  try {
-    const { personImage, clothingImage, category } = req.body;
-
-    if (!REPLICATE_API_KEY || REPLICATE_API_KEY === 'your_api_key_here') {
-      return res.status(400).json({ 
-        error: 'API key not configured',
-        message: 'Please add your Replicate API key to the .env file'
-      });
-    }
-
-    // Validate API key format
-    if (!/^r8_[a-zA-Z0-9]+$/.test(REPLICATE_API_KEY)) {
-      console.error('Invalid API key format. Key may contain invalid characters or whitespace.');
-      return res.status(400).json({ 
-        error: 'Invalid API key format',
-        message: 'API key appears to have invalid characters. Please check for spaces or newlines.'
-      });
-    }
-
-    // Map category to model format
-    const categoryMap = {
-      'shirts': 'upper_body',
-      'jackets': 'upper_body',
-      'pants': 'lower_body',
-      'dresses': 'dresses'
-    };
-    
-    const modelCategory = categoryMap[category] || 'upper_body';
-    
-    console.log(`Creating prediction with model (category: ${modelCategory})...`);
-    console.log('Person image size:', personImage.length);
-    console.log('Clothing image size:', clothingImage.length);
-    
-    // Call Replicate API with IDM-VTON model
-    // This model properly uses the provided garment image
-    const response = await axios.post(
-      'https://api.replicate.com/v1/predictions',
-      {
-        // Using cuuupid/idm-vton - more accurate garment preservation
-        version: 'c871bb9b046607b680449ecbae55fd8c6d945e0a1948644bf2361b3d021d3ff4',
-        input: {
-          garm_img: clothingImage,
-          human_img: personImage,
-          garment_des: 't-shirt',
-          is_checked: true,        // Enable cloth masking for better garment detection
-          is_checked_crop: true,   // Enable auto-crop to isolate garment from background
-          denoise_steps: 30,       // Higher quality (30 is good balance of quality/speed)
-          seed: 42                 // Consistent results
-        }
-      },
-      {
-        headers: {
-          'Authorization': `Token ${REPLICATE_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    const predictionId = response.data.id;
-    console.log('Prediction created:', predictionId);
-
-    // Return the prediction ID to the client
-    res.json({ predictionId, status: response.data.status });
-
-  } catch (error) {
-    console.error('API Error:', error.response?.data || error.message);
-    res.status(error.response?.status || 500).json({
-      error: error.response?.data?.detail || error.message,
-      status: error.response?.status
-    });
-  }
-});
-
 // Virtual try-on endpoint for multiple clothing items (nano banana)
 app.post('/api/tryon-multiple', async (req, res) => {
   try {
@@ -127,27 +52,23 @@ app.post('/api/tryon-multiple', async (req, res) => {
     // Using google/nano-banana for multi-image fusion
     // This combines the person image with all clothing items in a single AI pass
     
-    // Create a prompt that describes what we want to do
-    const prompt = `Apply these ${clothingImages.length} clothing items to the person in the image. ` +
-      `Create a realistic virtual try-on showing how these garments would look when worn together. ` +
-      `Maintain the person's pose, face, and body proportions. ` +
-      `Garments: ${clothingImages.map(c => c.name).join(', ')}`;
+    // Use the recommended prompt template for multi-image fusion
+    const prompt = `Create a new image by combining the elements from the provided images. Take the clothing items from the first ${clothingImages.length} images and place them on the person from the last image. The final image should be a realistic photograph of the person wearing the new clothing items, maintaining their original pose, face, and background.`;
     
     console.log('Nano Banana prompt:', prompt);
 
-    // Prepare input images array (person + all clothing items)
-    const inputImages = [personImage, ...clothingImages.map(item => item.image)];
+    // Prepare input images array (clothing items first, then person)
+    const inputImages = [...clothingImages.map(item => item.image), personImage];
     
+    // Use the model-specific endpoint (no version required)
     const response = await axios.post(
-      'https://api.replicate.com/v1/predictions',
+      'https://api.replicate.com/v1/models/google/nano-banana/predictions',
       {
-        model: 'google/nano-banana',
         input: {
           prompt: prompt,
-          image: inputImages[0], // Person image as primary
-          reference_images: inputImages.slice(1), // Clothing images as references
-          num_inference_steps: 50,
-          guidance_scale: 7.5
+          image_input: inputImages, // All images: person first, then clothing items
+          aspect_ratio: "match_input_image",
+          output_format: "jpg"
         }
       },
       {
