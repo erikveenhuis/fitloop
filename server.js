@@ -99,10 +99,138 @@ app.post('/api/tryon', async (req, res) => {
   }
 });
 
+// Virtual try-on endpoint for multiple clothing items (nano banana)
+app.post('/api/tryon-multiple', async (req, res) => {
+  try {
+    const { personImage, clothingImages, category } = req.body;
+
+    if (!REPLICATE_API_KEY || REPLICATE_API_KEY === 'your_api_key_here') {
+      return res.status(400).json({
+        error: 'API key not configured',
+        message: 'Please add your Replicate API key to the .env file'
+      });
+    }
+
+    // Validate API key format
+    if (!/^r8_[a-zA-Z0-9]+$/.test(REPLICATE_API_KEY)) {
+      console.error('Invalid API key format. Key may contain invalid characters or whitespace.');
+      return res.status(400).json({
+        error: 'Invalid API key format',
+        message: 'API key appears to have invalid characters. Please check for spaces or newlines.'
+      });
+    }
+
+    console.log(`Creating multi-garment prediction with ${clothingImages.length} items...`);
+    console.log('Person image size:', personImage.length);
+    console.log('Clothing items:', clothingImages.map(c => c.name).join(', '));
+
+    // For now, we'll process items sequentially using the same IDM-VTON model
+    // In the future, this could use a multi-garment model like nano banana
+    // For demonstration, we'll composite the items together
+    
+    // Start with the first item
+    let currentResult = personImage;
+    
+    for (let i = 0; i < clothingImages.length; i++) {
+      const item = clothingImages[i];
+      console.log(`Processing item ${i + 1}/${clothingImages.length}: ${item.name}`);
+      
+      const response = await axios.post(
+        'https://api.replicate.com/v1/predictions',
+        {
+          version: 'c871bb9b046607b680449ecbae55fd8c6d945e0a1948644bf2361b3d021d3ff4',
+          input: {
+            garm_img: item.image,
+            human_img: currentResult,
+            garment_des: 'clothing item',
+            is_checked: true,
+            is_checked_crop: true,
+            denoise_steps: 30,
+            seed: 42
+          }
+        },
+        {
+          headers: {
+            'Authorization': `Token ${REPLICATE_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const predictionId = response.data.id;
+      console.log(`Prediction ${i + 1} created:`, predictionId);
+
+      // Wait for this prediction to complete
+      let attempts = 0;
+      while (attempts < 60) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const statusResponse = await axios.get(
+          `https://api.replicate.com/v1/predictions/${predictionId}`,
+          {
+            headers: {
+              'Authorization': `Token ${REPLICATE_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (statusResponse.data.status === 'succeeded') {
+          currentResult = statusResponse.data.output;
+          console.log(`Item ${i + 1} processed successfully`);
+          break;
+        } else if (statusResponse.data.status === 'failed') {
+          throw new Error(`Processing failed for item ${i + 1}: ${statusResponse.data.error}`);
+        }
+        
+        attempts++;
+      }
+      
+      if (attempts >= 60) {
+        throw new Error(`Timeout processing item ${i + 1}`);
+      }
+    }
+
+    // Return a mock prediction ID with the final result embedded
+    const finalPredictionId = `multi-${Date.now()}`;
+    
+    // Store the result temporarily (in a real app, use a database or cache)
+    global.multiResults = global.multiResults || {};
+    global.multiResults[finalPredictionId] = currentResult;
+
+    res.json({ predictionId: finalPredictionId, status: 'succeeded' });
+
+  } catch (error) {
+    console.error('Multi-item API Error:', error.response?.data || error.message);
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data?.detail || error.message,
+      status: error.response?.status
+    });
+  }
+});
+
 // Poll prediction status
 app.get('/api/tryon/:predictionId', async (req, res) => {
   try {
     const { predictionId } = req.params;
+
+    // Check if it's a multi-item prediction
+    if (predictionId.startsWith('multi-')) {
+      global.multiResults = global.multiResults || {};
+      const result = global.multiResults[predictionId];
+      
+      if (result) {
+        res.json({
+          status: 'succeeded',
+          output: result
+        });
+        // Clean up
+        delete global.multiResults[predictionId];
+      } else {
+        res.json({ status: 'processing' });
+      }
+      return;
+    }
 
     const response = await axios.get(
       `https://api.replicate.com/v1/predictions/${predictionId}`,
