@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import CameraCapture from './components/CameraCapture'
-import ClothingCarousel from './components/ClothingCarousel'
+import ClothingGrid from './components/ClothingGrid'
 import ClothingUploader from './components/ClothingUploader'
 import { tryOnClothing } from './services/tryonAPI'
+import { getClothingByCategory } from './utils/imageUtils'
 
 const CATEGORIES = [
   { id: 'shirts', name: 'T-Shirts', icon: '👕' }
@@ -11,7 +12,6 @@ const CATEGORIES = [
 function App() {
   const [selectedClothing, setSelectedClothing] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('shirts')
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [tryOnResult, setTryOnResult] = useState(null)
   const [capturedInput, setCapturedInput] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -19,7 +19,25 @@ function App() {
   const [viewMode, setViewMode] = useState('camera') // 'camera', 'input', 'output'
   const [countdown, setCountdown] = useState(null) // null or number (3, 2, 1)
   const [uploadedClothing, setUploadedClothing] = useState([]) // User uploaded clothing items
+  const [allClothingItems, setAllClothingItems] = useState([])
   const cameraRef = useRef(null)
+
+  // Load default images from /public/default folder on mount
+  useEffect(() => {
+    const defaultImages = [
+      { id: 'default-1', name: 'Outfit 1', path: '/default/WhatsApp Image 2025-10-20 at 19.08.35.jpeg', isUploaded: true },
+      { id: 'default-2', name: 'Outfit 2', path: '/default/WhatsApp Image 2025-10-20 at 19.08.36.jpeg', isUploaded: true },
+      { id: 'default-3', name: 'Outfit 3', path: '/default/WhatsApp Image 2025-10-20 at 19.08.36 (1).jpeg', isUploaded: true },
+      { id: 'default-4', name: 'Outfit 4', path: '/default/WhatsApp Image 2025-10-20 at 19.08.36 (2).jpeg', isUploaded: true }
+    ]
+    setUploadedClothing(defaultImages)
+  }, [])
+
+  // Merge uploaded items with default items
+  useEffect(() => {
+    const defaultItems = getClothingByCategory(selectedCategory)
+    setAllClothingItems([...uploadedClothing, ...defaultItems])
+  }, [uploadedClothing, selectedCategory])
 
   const handleClothingSelect = async (clothing) => {
     setSelectedClothing(clothing)
@@ -44,18 +62,15 @@ function App() {
 
   const handleCategoryChange = (newCategory) => {
     setSelectedCategory(newCategory)
-    setCurrentIndex(0)
     setViewMode('camera')
     setTryOnResult(null)
     setCapturedInput(null)
   }
 
-  // Keyboard navigation
+  // Keyboard navigation - Enter to try on
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        // Handled by carousel
-      } else if (e.key === 'Enter' && selectedClothing && !isLoading) {
+      if (e.key === 'Enter' && selectedClothing && !isLoading) {
         handleTryOn()
       }
     }
@@ -157,10 +172,10 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Main Content - Camera Center Stage with Carousel Around It */}
-        <div className="relative">
-          {/* Center - Camera/Result - Main Focus */}
-          <div className="max-w-2xl mx-auto mb-8">
+        {/* Main Content - Side by Side Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Side - Camera/Result */}
+          <div className="order-2 lg:order-1">
             <div className="bg-black/40 backdrop-blur-sm rounded-3xl shadow-2xl p-6 border border-white/10 relative z-10">
               {/* View Mode Toggle Buttons */}
               {(capturedInput || tryOnResult) && (
@@ -292,9 +307,10 @@ function App() {
             )}
           </div>
 
-            {/* Clothing Upload & Carousel - Wrapping Around Camera */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/10">
-              <div className="flex items-center justify-center gap-3 mb-8">
+          {/* Right Side - Clothing Grid & Upload */}
+          <div className="order-1 lg:order-2">
+            <div className="bg-black/30 backdrop-blur-sm rounded-3xl shadow-2xl p-6 border border-white/10 sticky top-8">
+              <div className="flex items-center justify-center gap-3 mb-6">
                 <span className="text-4xl">👕</span>
                 <h2 className="text-2xl font-bold text-white">
                   Your Wardrobe
@@ -304,44 +320,43 @@ function App() {
               {/* Upload Section */}
               <ClothingUploader onUpload={handleClothingUpload} />
               
-              {/* Show uploaded items count */}
-              {uploadedClothing.length > 0 && (
-                <div className="mb-4 text-center">
-                  <span className="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-400/30 px-4 py-2 rounded-full text-purple-200 text-sm">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {/* Show items count */}
+              <div className="mb-4 flex items-center justify-between text-sm">
+                <span className="text-purple-200">
+                  {allClothingItems.length} item{allClothingItems.length !== 1 ? 's' : ''} total
+                </span>
+                {uploadedClothing.length > 0 && (
+                  <span className="inline-flex items-center gap-1 bg-green-500/20 border border-green-400/30 px-3 py-1 rounded-full text-green-200">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    {uploadedClothing.length} custom item{uploadedClothing.length !== 1 ? 's' : ''} uploaded
+                    {uploadedClothing.length} custom
                   </span>
-                </div>
-              )}
+                )}
+              </div>
               
-              {/* Clothing Carousel */}
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-4 text-center">
-                  Browse Collection
-                </h3>
-                <ClothingCarousel
-                  category={selectedCategory}
-                  uploadedItems={uploadedClothing}
-                  onClothingSelect={handleClothingSelect}
-                  onDeleteClothing={handleDeleteClothing}
-                  currentIndex={currentIndex}
-                  setCurrentIndex={setCurrentIndex}
+              {/* Clothing Grid */}
+              <div className="max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-white/10">
+                <ClothingGrid
+                  items={allClothingItems}
+                  selectedItem={selectedClothing}
+                  onItemSelect={handleClothingSelect}
+                  onItemDelete={handleDeleteClothing}
                 />
               </div>
             </div>
+          </div>
         </div>
 
         {/* Quick Tips */}
-        <div className="mt-6">
+        <div className="mt-8 col-span-1 lg:col-span-2">
           <div className="bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-xl p-4">
             <div className="flex items-start gap-3">
               <svg className="h-6 w-6 text-blue-300 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="text-blue-100 text-sm">
-                <strong className="text-white">Quick Tips:</strong> Position yourself in portrait view (vertical) for best results • Use arrow buttons or keyboard ← → to browse t-shirts • Click "Try On This Item" to see the accurate result in ~15-30 seconds • Press Enter as a shortcut
+                <strong className="text-white">Quick Tips:</strong> Position yourself in portrait view (vertical) for best results • Click any clothing item to select it • Click "Try On This Item" to see the accurate result in ~15-30 seconds • Press Enter as a shortcut
               </div>
             </div>
           </div>
