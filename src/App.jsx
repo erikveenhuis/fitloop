@@ -104,9 +104,50 @@ function App() {
 
   const handleTryOn = useCallback(async () => {
     if (selectedClothing) {
-      // Start countdown
-      setCountdown(3)
       setError(null)
+      
+      // Only show countdown for camera (not for uploaded images)
+      const isUploadedImage = cameraRef.current?.isUsingUploadedImage()
+      
+      if (!isUploadedImage) {
+        // Start countdown for camera
+        setCountdown(3)
+        
+        // Wait for countdown to finish
+        await new Promise((resolve) => {
+          let count = 3
+          const interval = setInterval(() => {
+            count--
+            if (count > 0) {
+              setCountdown(count)
+            } else {
+              setCountdown(null)
+              clearInterval(interval)
+              resolve()
+            }
+          }, 1000)
+        })
+      }
+      
+      // Now capture and process
+      await processTryOn(selectedClothing)
+    }
+  }, [selectedClothing, processTryOn])
+
+  const handleTryOnAll = async () => {
+    if (uploadedClothing.length === 0) {
+      setError('Please upload at least one clothing item to try on')
+      return
+    }
+
+    setError(null)
+    
+    // Only show countdown for camera (not for uploaded images)
+    const isUploadedImage = cameraRef.current?.isUsingUploadedImage()
+    
+    if (!isUploadedImage) {
+      // Start countdown for camera
+      setCountdown(3)
       
       // Wait for countdown to finish
       await new Promise((resolve) => {
@@ -122,36 +163,7 @@ function App() {
           }
         }, 1000)
       })
-      
-      // Now capture and process
-      await processTryOn(selectedClothing)
     }
-  }, [selectedClothing, processTryOn])
-
-  const handleTryOnAll = async () => {
-    if (uploadedClothing.length === 0) {
-      setError('Please upload at least one clothing item to try on')
-      return
-    }
-
-    // Start countdown
-    setCountdown(3)
-    setError(null)
-    
-    // Wait for countdown to finish
-    await new Promise((resolve) => {
-      let count = 3
-      const interval = setInterval(() => {
-        count--
-        if (count > 0) {
-          setCountdown(count)
-        } else {
-          setCountdown(null)
-          clearInterval(interval)
-          resolve()
-        }
-      }, 1000)
-    })
     
     // Now capture and process all items
     await processTryOnMultiple(uploadedClothing)

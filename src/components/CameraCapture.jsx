@@ -106,6 +106,9 @@ const CameraCapture = forwardRef((props, ref) => {
 
       // Convert canvas to base64 image
       return canvas.toDataURL('image/jpeg', 0.9)
+    },
+    isUsingUploadedImage: () => {
+      return inputMode === 'upload' && uploadedImage !== null
     }
   }))
 
