@@ -2,17 +2,24 @@
 
 ## Quick Start
 
-### Option 1: Download from Unsplash (Free)
+### Option 1: Upload via UI (Easiest!) ⭐
 
-Run the included script to automatically download 8 high-quality t-shirt images:
+**The simplest way to add custom clothing:**
 
-```bash
-node download-tshirts.js
-```
+1. Open the app at http://localhost:5173
+2. Look for the upload area with the 📤 icon
+3. **Drag & drop** your clothing images OR click "Choose Files"
+4. Images appear instantly in the carousel with a "Custom" badge
+5. Start trying them on immediately!
 
-This will download professional t-shirt photos from Unsplash (free to use).
+**Features:**
+- ✅ Supports multiple uploads at once
+- ✅ Works with JPG, PNG, WEBP formats
+- ✅ No code changes needed
+- ✅ Delete uploaded items by hovering and clicking trash icon
+- ✅ Auto-selects newly uploaded item for quick testing
 
-### Option 2: Add Your Own Images
+### Option 2: Add to Source Code
 
 1. **Get T-Shirt Images**
    - Take photos of t-shirts laid flat on a clean background
@@ -90,9 +97,15 @@ const CLOTHING_DATABASE = {
 
 ## Testing Your Images
 
+**If using UI upload:**
+1. Open app at http://localhost:5173
+2. Upload images via drag & drop
+3. Click "Try On This Item" to test immediately
+
+**If adding to source code:**
 1. Add images to `public/clothing/shirts/`
 2. Update `imageUtils.js` with correct paths
-3. Refresh the app at http://localhost:5175
+3. Refresh the app at http://localhost:5173
 4. Browse through carousel to see your t-shirts
 5. Test virtual try-on with different t-shirts
 

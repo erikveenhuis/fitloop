@@ -21,10 +21,11 @@ http://localhost:5173
 ### What you can do right now:
 
 1. ✅ **Test the camera** - Allow camera access when prompted
-2. ✅ **Browse clothing** - Switch between Shirts, Pants, Jackets, Dresses
-3. ✅ **Select items** - Click on any clothing item to select it
-4. ✅ **Use randomizer** - Try the randomize button for random picks
-5. ⚠️ **Try-on (demo mode)** - Currently shows camera feed (needs API key for AI)
+2. ✅ **Upload custom clothing** - Drag & drop your own clothing images
+3. ✅ **Browse collection** - Navigate through t-shirts using arrows or keyboard
+4. ✅ **View modes** - Toggle between Camera/Input/Output to see AI processing
+5. ✅ **3-second countdown** - Pose before photo capture
+6. ✅ **Virtual try-on** - Uses AI to realistically overlay clothing on your photo
 
 ### To enable real AI try-on:
 
@@ -36,11 +37,26 @@ http://localhost:5173
    ```
 4. Restart: `npm run dev`
 
-### To add real clothing images:
+### To add clothing images:
 
-1. Add images to `public/clothing/shirts/`, `public/clothing/pants/`, etc.
+**Option 1: Upload via UI (easiest)**
+1. Click or drag & drop images into the upload area
+2. Uploaded items appear in the carousel with a "Custom" badge
+3. Hover over uploaded items to delete them
+
+**Option 2: Add to source code**
+1. Add images to `public/clothing/shirts/`
 2. Update paths in `src/utils/imageUtils.js`
 3. Refresh browser
+
+### Deployment:
+
+Push to GitHub, and Railway will automatically deploy:
+```bash
+git push origin main
+```
+
+Your app will be live at your Railway domain!
 
 ---
 
