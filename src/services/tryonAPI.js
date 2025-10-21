@@ -6,94 +6,58 @@ const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 // Note: This now uses a backend server to handle Replicate API calls
 // This avoids CORS issues and keeps your API key secure
 
-export async function tryOnClothing(personImageBase64, clothingImagePathOrItems, category = 'shirts', isMultiple = false) {
+export async function tryOnClothing(personImageBase64, clothingImagePathOrItems, category = 'shirts') {
   console.log('Starting virtual try-on process...')
 
   try {
-    // Handle multiple clothing items
-    if (isMultiple && Array.isArray(clothingImagePathOrItems)) {
-      console.log(`Processing ${clothingImagePathOrItems.length} clothing items...`)
-      
-      // Fetch all clothing images
-      const clothingImages = await Promise.all(
-        clothingImagePathOrItems.map(async (item) => {
-          const blob = await fetch(item.path).then(r => r.blob())
-          const dataUri = await blobToDataUri(blob)
-          return {
-            name: item.name,
-            image: dataUri
-          }
-        })
-      )
-
-      console.log('Person image size:', personImageBase64.length)
-      console.log('Clothing items:', clothingImages.length)
-
-      // Call our backend API with multiple items
-      console.log('Calling backend API for complete outfit (nano banana)...')
-      const response = await axios.post(
-        `${API_URL}/tryon-multiple`,
-        {
-          personImage: personImageBase64,
-          clothingImages: clothingImages,
-          category: category
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+    // Ensure we always have an array of clothing items
+    const clothingItems = Array.isArray(clothingImagePathOrItems) 
+      ? clothingImagePathOrItems 
+      : [{ path: clothingImagePathOrItems, name: category }]
+    
+    console.log(`Processing ${clothingItems.length} clothing items...`)
+    
+    // Fetch all clothing images
+    const clothingImages = await Promise.all(
+      clothingItems.map(async (item) => {
+        const blob = await fetch(item.path).then(r => r.blob())
+        const dataUri = await blobToDataUri(blob)
+        return {
+          name: item.name || category,
+          image: dataUri
         }
-      )
+      })
+    )
 
-      console.log('API Response:', response.data)
+    console.log('Person image size:', personImageBase64.length)
+    console.log('Clothing items:', clothingImages.length)
 
-      // Get the prediction ID
-      const predictionId = response.data.predictionId
-      console.log('Prediction ID:', predictionId)
-      
-      // Poll for the result
-      const result = await pollForResult(predictionId)
-      
-      return result
-    } else {
-      // Handle single clothing item (original behavior)
-      const clothingImagePath = clothingImagePathOrItems
-      console.log('Fetching clothing image from:', clothingImagePath)
-      const clothingImageBlob = await fetch(clothingImagePath).then(r => r.blob())
-      const clothingImageDataUri = await blobToDataUri(clothingImageBlob)
-
-      console.log('Person image size:', personImageBase64.length)
-      console.log('Clothing image size:', clothingImageDataUri.length)
-      console.log('Category:', category)
-      console.log('Clothing path:', clothingImagePath)
-
-      // Call our backend API
-      console.log('Calling backend API with accurate garment preservation model...')
-      const response = await axios.post(
-        `${API_URL}/tryon`,
-        {
-          personImage: personImageBase64,
-          clothingImage: clothingImageDataUri,
-          category: category
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+    // Call our backend API (nano banana)
+    console.log('Calling backend API for outfit (nano banana)...')
+    const response = await axios.post(
+      `${API_URL}/tryon-multiple`,
+      {
+        personImage: personImageBase64,
+        clothingImages: clothingImages,
+        category: category
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json'
         }
-      )
+      }
+    )
 
-      console.log('API Response:', response.data)
+    console.log('API Response:', response.data)
 
-      // Get the prediction ID
-      const predictionId = response.data.predictionId
-      console.log('Prediction ID:', predictionId)
-      
-      // Poll for the result
-      const result = await pollForResult(predictionId)
-      
-      return result
-    }
+    // Get the prediction ID
+    const predictionId = response.data.predictionId
+    console.log('Prediction ID:', predictionId)
+    
+    // Poll for the result
+    const result = await pollForResult(predictionId)
+    
+    return result
   } catch (error) {
     console.error('Try-on API error details:', {
       message: error.message,

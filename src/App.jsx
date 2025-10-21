@@ -191,7 +191,7 @@ function App() {
       setCapturedInput(personImage)
 
       // Call the try-on API with multiple clothing items
-      const result = await tryOnClothing(personImage, clothingItems, selectedCategory, true)
+      const result = await tryOnClothing(personImage, clothingItems, selectedCategory)
       setTryOnResult(result)
       
       // Auto-switch to output view when result is ready

@@ -124,12 +124,12 @@ const CLOTHING_DATABASE = {
 - **Vite** - Build tool and dev server
 - **TailwindCSS** - Utility-first CSS framework
 - **Axios** - HTTP client for API calls
-- **Replicate API** - AI model integration (IDM-VTON)
+- **Replicate API** - AI model integration (Google Nano Banana)
 - **WebRTC** - Camera access via getUserMedia API
 
 ## AI Model Information
 
-This application uses virtual try-on models from Replicate. The default integration is set up for IDM-VTON, a state-of-the-art virtual try-on model.
+This application uses virtual try-on models from Replicate. The integration uses Google's Nano Banana model, which supports multi-garment virtual try-on.
 
 ### Demo Mode
 
