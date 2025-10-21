@@ -67,17 +67,6 @@ function App() {
     setCapturedInput(null)
   }
 
-  // Keyboard navigation - Enter to try on
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter' && selectedClothing && !isLoading) {
-        handleTryOn()
-      }
-    }
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [selectedClothing, isLoading, handleTryOn])
-
   const processTryOn = useCallback(async (clothing) => {
     if (!cameraRef.current) {
       setError('Camera not ready. Please allow camera access.')
@@ -202,6 +191,17 @@ function App() {
       setIsLoading(false)
     }
   }
+
+  // Keyboard navigation - Enter to try on
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' && selectedClothing && !isLoading) {
+        handleTryOn()
+      }
+    }
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [selectedClothing, isLoading, handleTryOn])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
