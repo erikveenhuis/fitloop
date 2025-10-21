@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import CameraCapture from './components/CameraCapture'
 import ClothingCarousel from './components/ClothingCarousel'
+import ClothingUploader from './components/ClothingUploader'
 import { tryOnClothing } from './services/tryonAPI'
 
 const CATEGORIES = [
@@ -17,12 +18,28 @@ function App() {
   const [error, setError] = useState(null)
   const [viewMode, setViewMode] = useState('camera') // 'camera', 'input', 'output'
   const [countdown, setCountdown] = useState(null) // null or number (3, 2, 1)
+  const [uploadedClothing, setUploadedClothing] = useState([]) // User uploaded clothing items
   const cameraRef = useRef(null)
 
   const handleClothingSelect = async (clothing) => {
     setSelectedClothing(clothing)
     setViewMode('camera')
     // Don't auto-process, wait for user to click Try On
+  }
+
+  const handleClothingUpload = (newClothing) => {
+    setUploadedClothing(prev => [...prev, newClothing])
+    // Auto-select the newly uploaded item
+    setSelectedClothing(newClothing)
+    setViewMode('camera')
+  }
+
+  const handleDeleteClothing = (clothingId) => {
+    setUploadedClothing(prev => prev.filter(item => item.id !== clothingId))
+    // If the deleted item was selected, deselect it
+    if (selectedClothing?.id === clothingId) {
+      setSelectedClothing(null)
+    }
   }
 
   const handleCategoryChange = (newCategory) => {
@@ -275,21 +292,45 @@ function App() {
             )}
           </div>
 
-          {/* Clothing Carousel - Wrapping Around Camera */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/10 min-h-[400px]">
-            <div className="flex items-center justify-center gap-3 mb-8">
-              <span className="text-4xl">👕</span>
-              <h2 className="text-2xl font-bold text-white">
-                Browse T-Shirts
-              </h2>
+            {/* Clothing Upload & Carousel - Wrapping Around Camera */}
+            <div className="bg-black/30 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/10">
+              <div className="flex items-center justify-center gap-3 mb-8">
+                <span className="text-4xl">👕</span>
+                <h2 className="text-2xl font-bold text-white">
+                  Your Wardrobe
+                </h2>
+              </div>
+              
+              {/* Upload Section */}
+              <ClothingUploader onUpload={handleClothingUpload} />
+              
+              {/* Show uploaded items count */}
+              {uploadedClothing.length > 0 && (
+                <div className="mb-4 text-center">
+                  <span className="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-400/30 px-4 py-2 rounded-full text-purple-200 text-sm">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {uploadedClothing.length} custom item{uploadedClothing.length !== 1 ? 's' : ''} uploaded
+                  </span>
+                </div>
+              )}
+              
+              {/* Clothing Carousel */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 text-center">
+                  Browse Collection
+                </h3>
+                <ClothingCarousel
+                  category={selectedCategory}
+                  uploadedItems={uploadedClothing}
+                  onClothingSelect={handleClothingSelect}
+                  onDeleteClothing={handleDeleteClothing}
+                  currentIndex={currentIndex}
+                  setCurrentIndex={setCurrentIndex}
+                />
+              </div>
             </div>
-            <ClothingCarousel
-              category={selectedCategory}
-              onClothingSelect={handleClothingSelect}
-              currentIndex={currentIndex}
-              setCurrentIndex={setCurrentIndex}
-            />
-          </div>
         </div>
 
         {/* Quick Tips */}

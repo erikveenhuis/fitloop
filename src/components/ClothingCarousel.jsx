@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
 import { getClothingByCategory } from '../utils/imageUtils'
 
-function ClothingCarousel({ category, onClothingSelect, currentIndex, setCurrentIndex }) {
+function ClothingCarousel({ category, uploadedItems = [], onClothingSelect, onDeleteClothing, currentIndex, setCurrentIndex }) {
   const [clothingItems, setClothingItems] = useState([])
 
   useEffect(() => {
-    const items = getClothingByCategory(category)
-    setClothingItems(items)
-    if (items.length > 0 && currentIndex >= items.length) {
+    // Merge uploaded items with default items from category
+    const defaultItems = getClothingByCategory(category)
+    const allItems = [...uploadedItems, ...defaultItems]
+    setClothingItems(allItems)
+    if (allItems.length > 0 && currentIndex >= allItems.length) {
       setCurrentIndex(0)
     }
-  }, [category, currentIndex, setCurrentIndex])
+  }, [category, uploadedItems, currentIndex, setCurrentIndex])
 
   const goToPrevious = () => {
     if (clothingItems.length === 0) return
@@ -88,12 +90,35 @@ function ClothingCarousel({ category, onClothingSelect, currentIndex, setCurrent
 
       {/* Current Item - Center */}
       <div className="flex flex-col items-center gap-4">
-        <div className="w-64 h-64 rounded-2xl overflow-hidden border-8 border-purple-600 shadow-2xl">
+        <div className="relative w-64 h-64 rounded-2xl overflow-hidden border-8 border-purple-600 shadow-2xl group">
           <img
             src={currentItem.path}
             alt={currentItem.name}
             className="w-full h-full object-cover"
           />
+          {/* Delete Button for Uploaded Items */}
+          {currentItem.isUploaded && onDeleteClothing && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                if (confirm(`Delete "${currentItem.name}"?`)) {
+                  onDeleteClothing(currentItem.id)
+                }
+              }}
+              className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+              title="Delete this item"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
+          {/* Uploaded Badge */}
+          {currentItem.isUploaded && (
+            <div className="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded-lg text-xs font-medium">
+              Custom
+            </div>
+          )}
         </div>
         <div className="text-center">
           <h3 className="text-2xl font-bold text-white">{currentItem.name}</h3>
