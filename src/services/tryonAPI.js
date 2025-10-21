@@ -83,16 +83,17 @@ export async function tryOnClothing(personImageBase64, clothingImagePathOrItems,
         }
       )
 
-    console.log('API Response:', response.data)
+      console.log('API Response:', response.data)
 
-    // Get the prediction ID
-    const predictionId = response.data.predictionId
-    console.log('Prediction ID:', predictionId)
-    
-    // Poll for the result
-    const result = await pollForResult(predictionId)
-    
-    return result
+      // Get the prediction ID
+      const predictionId = response.data.predictionId
+      console.log('Prediction ID:', predictionId)
+      
+      // Poll for the result
+      const result = await pollForResult(predictionId)
+      
+      return result
+    }
   } catch (error) {
     console.error('Try-on API error details:', {
       message: error.message,
