@@ -285,12 +285,29 @@ function App() {
 
               {/* Try On Button */}
               {selectedClothing && !isLoading && (
-                <button
-                  onClick={handleTryOn}
-                  className="mt-4 w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/50 hover:shadow-xl hover:scale-105 transform"
-                >
-                  ✨ Try On This Item
-                </button>
+                <div className="mt-4 space-y-2">
+                  <div className="text-center text-sm text-purple-200">
+                    Selected: <span className="font-semibold text-white">{selectedClothing.name}</span>
+                  </div>
+                  <button
+                    onClick={handleTryOn}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/50 hover:shadow-xl hover:scale-105 transform flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                    </svg>
+                    Apply to My Photo
+                  </button>
+                </div>
+              )}
+              
+              {/* Prompt when no clothing selected */}
+              {!selectedClothing && !isLoading && (
+                <div className="mt-4 text-center p-4 bg-purple-500/20 border border-purple-400/30 rounded-xl">
+                  <p className="text-purple-200 text-sm">
+                    👉 Select a clothing item from the right to try it on
+                  </p>
+                </div>
               )}
             </div>
 
