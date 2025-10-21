@@ -1,19 +1,6 @@
-// Clothing database - maps to files in public/clothing directory
+// Clothing database - empty by default, users upload their own clothing
 const CLOTHING_DATABASE = {
-  shirts: [
-    { id: 'shirt-1', name: 'Classic White Tee', path: '/clothing/shirts/white.jpg' },
-    { id: 'shirt-2', name: 'Black Essential', path: '/clothing/shirts/black.jpg' },
-    { id: 'shirt-3', name: 'Navy Blue Crew', path: '/clothing/shirts/navy.jpg' },
-    { id: 'shirt-4', name: 'Grey Athletic', path: '/clothing/shirts/gray.jpg' },
-    { id: 'shirt-5', name: 'Dark Blue Tee', path: '/clothing/shirts/darkblue.jpg' },
-    { id: 'shirt-6', name: 'Light Blue Casual', path: '/clothing/shirts/lightblue.jpg' },
-    { id: 'shirt-7', name: 'Green Crew Neck', path: '/clothing/shirts/green.jpg' },
-    { id: 'shirt-8', name: 'Purple Premium', path: '/clothing/shirts/purple.jpg' },
-    { id: 'shirt-9', name: 'Red Statement', path: '/clothing/shirts/red.jpg' },
-    { id: 'shirt-10', name: 'Orange Bold', path: '/clothing/shirts/orange.jpg' },
-    { id: 'shirt-11', name: 'Pink Soft', path: '/clothing/shirts/pink.jpg' },
-    { id: 'shirt-12', name: 'Yellow Bright', path: '/clothing/shirts/yellow.jpg' }
-  ]
+  shirts: []
 }
 
 export function getClothingByCategory(category) {
