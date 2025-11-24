@@ -22,7 +22,7 @@ function App() {
   const [allClothingItems, setAllClothingItems] = useState([])
   const cameraRef = useRef(null)
 
-  // Load default images from /public/default folder on mount
+  // Load default images as uploaded items on mount
   useEffect(() => {
     const defaultImages = [
       { id: 'default-1', name: 'Outfit 1', path: '/default/WhatsApp Image 2025-10-20 at 19.08.35.jpeg', isUploaded: true },
@@ -204,16 +204,7 @@ function App() {
     }
   }
 
-  // Keyboard navigation - Enter to try on
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter' && selectedClothing && !isLoading) {
-        handleTryOn()
-      }
-    }
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [selectedClothing, isLoading, handleTryOn])
+  // Keyboard navigation removed - only "Try On All" button available
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
@@ -350,7 +341,7 @@ function App() {
                       </p>
                       <p className="mt-2 text-purple-200 text-sm">
                         {uploadedClothing.length > 1 && isLoading ? 
-                          `Using Google Nano Banana • Multi-image fusion • ${uploadedClothing.length} items` : 
+                          `Using Google Nano Banana Pro • Multi-image fusion • ${uploadedClothing.length} items` : 
                           'Using accurate mode • 15-30 seconds'
                         }
                       </p>
@@ -367,47 +358,17 @@ function App() {
               {/* Try On Buttons */}
               {!isLoading && (
                 <div className="mt-4 space-y-3">
-                  {/* Try On Selected Item */}
-                  {selectedClothing && (
-                    <>
-                      <div className="text-center text-sm text-purple-200">
-                        Selected: <span className="font-semibold text-white">{selectedClothing.name}</span>
-                      </div>
-                      <button
-                        onClick={handleTryOn}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/50 hover:shadow-xl hover:scale-105 transform flex items-center justify-center gap-2"
-                      >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                        </svg>
-                        Apply This Item
-                      </button>
-                    </>
-                  )}
-
-                  {/* Try On All Items */}
+                  {/* Try On All Items - Only option available */}
                   {uploadedClothing.length > 0 && (
-                    <>
-                      {selectedClothing && (
-                        <div className="relative">
-                          <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-white/20"></div>
-                          </div>
-                          <div className="relative flex justify-center text-xs">
-                            <span className="bg-black/40 px-2 text-purple-300">or</span>
-                          </div>
-                        </div>
-                      )}
-                      <button
-                        onClick={handleTryOnAll}
-                        className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg shadow-green-500/50 hover:shadow-xl hover:scale-105 transform flex items-center justify-center gap-2"
-                      >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Try On All {uploadedClothing.length} Item{uploadedClothing.length !== 1 ? 's' : ''} (Complete Outfit)
-                      </button>
-                    </>
+                    <button
+                      onClick={handleTryOnAll}
+                      className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg shadow-green-500/50 hover:shadow-xl hover:scale-105 transform flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Try On All {uploadedClothing.length} Item{uploadedClothing.length !== 1 ? 's' : ''} (Complete Outfit)
+                    </button>
                   )}
                   
                   {/* Prompt when no clothing */}
@@ -484,7 +445,7 @@ function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="text-blue-100 text-sm">
-                <strong className="text-white">Quick Tips:</strong> Position yourself in portrait view (vertical) for best results • Click any clothing item to select it • Click "Try On This Item" to see the accurate result in ~15-30 seconds • Press Enter as a shortcut
+                <strong className="text-white">Quick Tips:</strong> Position yourself in portrait view (vertical) for best results • Upload or use the default clothing items • Click "Try On All Items" to see the complete outfit applied sequentially • Processing takes about 30-60 seconds per item
               </div>
             </div>
           </div>

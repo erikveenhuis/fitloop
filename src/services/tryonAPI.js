@@ -32,8 +32,8 @@ export async function tryOnClothing(personImageBase64, clothingImagePathOrItems,
     console.log('Person image size:', personImageBase64.length)
     console.log('Clothing items:', clothingImages.length)
 
-    // Call our backend API (nano banana)
-    console.log('Calling backend API for outfit (nano banana)...')
+    // Call our backend API (nano banana pro)
+    console.log('Calling backend API for outfit (nano banana pro)...')
     const response = await axios.post(
       `${API_URL}/tryon-multiple`,
       {
@@ -50,7 +50,13 @@ export async function tryOnClothing(personImageBase64, clothingImagePathOrItems,
 
     console.log('API Response:', response.data)
 
-    // Get the prediction ID
+    // Check if we got a direct result (status: 'succeeded' with output)
+    if (response.data.status === 'succeeded' && response.data.output) {
+      console.log('Received direct result:', response.data.output)
+      return response.data.output
+    }
+    
+    // Otherwise, get the prediction ID and poll for the result
     const predictionId = response.data.predictionId
     console.log('Prediction ID:', predictionId)
     

@@ -19,12 +19,37 @@ app.use(express.json({ limit: '50mb' }));
 // Clean and validate API key (remove any whitespace/newlines)
 const REPLICATE_API_KEY = process.env.VITE_REPLICATE_API_KEY?.trim();
 
+// Helper function to poll a prediction until completion
+async function pollPrediction(predictionId, maxAttempts = 60) {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+    
+    const response = await axios.get(
+      `https://api.replicate.com/v1/predictions/${predictionId}`,
+      {
+        headers: {
+          'Authorization': `Token ${REPLICATE_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    console.log(`  Poll ${i + 1}: ${response.data.status}`);
+    
+    if (response.data.status === 'succeeded' || response.data.status === 'failed') {
+      return response.data;
+    }
+  }
+  
+  throw new Error('Prediction timeout');
+}
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', apiKeyConfigured: !!REPLICATE_API_KEY });
 });
 
-// Virtual try-on endpoint for multiple clothing items (nano banana)
+// Virtual try-on endpoint for multiple clothing items (nano banana pro)
 app.post('/api/tryon-multiple', async (req, res) => {
   try {
     const { personImage, clothingImages, category } = req.body;
@@ -45,30 +70,33 @@ app.post('/api/tryon-multiple', async (req, res) => {
       });
     }
 
-    console.log(`Creating multi-garment prediction with ${clothingImages.length} items using google/nano-banana...`);
+    console.log(`\n========================================`);
+    console.log(`Processing ${clothingImages.length} clothing items ALL AT ONCE`);
+    console.log(`========================================`);
     console.log('Person image size:', personImage.length);
     console.log('Clothing items:', clothingImages.map(c => c.name).join(', '));
 
-    // Using google/nano-banana for multi-image fusion
-    // This combines the person image with all clothing items in a single AI pass
-    
-    // Use the recommended prompt template for multi-image fusion
-    const prompt = `Create a new image by combining the elements from the provided images. Take the clothing items from the first ${clothingImages.length} images and place them on the person from the last image. The final image should be a realistic photograph of the person wearing the new clothing items, maintaining their original pose, face, and background.`;
-    
-    console.log('Nano Banana prompt:', prompt);
+    // Prepare all images for a single API call
+    // Format: [person_image, clothing_item_1, clothing_item_2, ...]
+    const allImages = [personImage, ...clothingImages.map(item => item.image)];
 
-    // Prepare input images array (clothing items first, then person)
-    const inputImages = [...clothingImages.map(item => item.image), personImage];
-    
-    // Use the model-specific endpoint (no version required)
+    // Create prompt that instructs applying all clothing items at once
+    const clothingNames = clothingImages.map(item => item.name).join(', ');
+    const prompt = `Create a new image by combining the elements from the provided images. The first image is the person. The remaining images are clothing items (${clothingNames}). Apply all the clothing items to the person in the first image, creating a realistic photograph of the person wearing all the clothing items together. Maintain the person's original pose, face, and background while naturally incorporating all the clothing pieces.`;
+
+    console.log(`\n--- Applying all ${clothingImages.length} items at once ---`);
+
+    // Create single prediction with all images
     const response = await axios.post(
-      'https://api.replicate.com/v1/models/google/nano-banana/predictions',
+      'https://api.replicate.com/v1/models/google/nano-banana-pro/predictions',
       {
         input: {
           prompt: prompt,
-          image_input: inputImages, // All images: person first, then clothing items
+          resolution: "1K",
+          image_input: allImages,
           aspect_ratio: "match_input_image",
-          output_format: "jpg"
+          output_format: "jpg",
+          safety_filter_level: "block_only_high"
         }
       },
       {
@@ -79,11 +107,23 @@ app.post('/api/tryon-multiple', async (req, res) => {
       }
     );
 
-    const predictionId = response.data.id;
-    console.log('Nano Banana prediction created:', predictionId);
+    console.log(`  Created prediction: ${response.data.id}`);
 
-    // Return the prediction ID to the client
-    res.json({ predictionId, status: response.data.status });
+    // Wait for the prediction to complete
+    const result = await pollPrediction(response.data.id);
+
+    if (result.status === 'failed') {
+      throw new Error(`Prediction failed: ${result.error}`);
+    }
+
+    console.log(`\n✓ All ${clothingImages.length} items applied successfully in single call!`);
+    console.log(`========================================\n`);
+
+    // Return the final result directly
+    res.json({
+      status: 'succeeded',
+      output: result.output
+    });
 
   } catch (error) {
     console.error('Multi-item API Error:', error.response?.data || error.message);
