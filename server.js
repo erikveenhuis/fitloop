@@ -92,7 +92,7 @@ app.post('/api/tryon-multiple', async (req, res) => {
       {
         input: {
           prompt: prompt,
-          resolution: "1K",
+          resolution: "2K",
           image_input: allImages,
           aspect_ratio: "match_input_image",
           output_format: "jpg",

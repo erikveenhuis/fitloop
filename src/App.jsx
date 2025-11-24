@@ -340,8 +340,8 @@ function App() {
                         ✨ Creating your virtual try-on...
                       </p>
                       <p className="mt-2 text-purple-200 text-sm">
-                        {uploadedClothing.length > 1 && isLoading ? 
-                          `Using Google Nano Banana Pro • Multi-image fusion • ${uploadedClothing.length} items` : 
+                        {uploadedClothing.length > 1 && isLoading ?
+                          `Using Google Nano Banana Pro • Simultaneous fusion • ${uploadedClothing.length} items` :
                           'Using accurate mode • 15-30 seconds'
                         }
                       </p>
@@ -445,7 +445,7 @@ function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="text-blue-100 text-sm">
-                <strong className="text-white">Quick Tips:</strong> Position yourself in portrait view (vertical) for best results • Upload or use the default clothing items • Click "Try On All Items" to see the complete outfit applied sequentially • Processing takes about 30-60 seconds per item
+                <strong className="text-white">Quick Tips:</strong> Position yourself in portrait view (vertical) for best results • Upload or use the default clothing items • Click "Try On All Items" to see the complete outfit applied simultaneously in a single operation • Processing takes about 30-60 seconds total
               </div>
             </div>
           </div>

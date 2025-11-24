@@ -144,7 +144,7 @@ If you don't configure a Replicate API key, the app will run in demo mode where:
 With a valid Replicate API key:
 - Real AI processing occurs
 - Clothing items are realistically overlaid on your image
-- Processing takes 10-30 seconds per try-on
+- Processing takes 15-60 seconds per outfit (all items processed simultaneously)
 - Results are high-quality virtual try-ons
 
 ## Development
